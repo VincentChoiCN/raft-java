@@ -9,7 +9,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.FixedLengthFrameDecoder;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
 import java.net.InetSocketAddress;
@@ -25,16 +24,18 @@ public class NodeRpcServer {
 
   public NodeRpcServer(int port) throws InterruptedException {
 
-    NodeService nodeService = new NodeServiceImpl();
+    Node node = new Node();
+
+    NodeService nodeService = new NodeServiceImpl(node);
 
     EventLoopGroup eventloopGroup = new NioEventLoopGroup(10, new DefaultThreadFactory("alex.raft", true, Thread.MAX_PRIORITY));
     ServerBootstrap bootstrap = new ServerBootstrap().group(eventloopGroup).channel(NioServerSocketChannel.class).childOption(ChannelOption.TCP_NODELAY, true).childOption(ChannelOption.SO_KEEPALIVE, true).childHandler(new ChannelInitializer<Channel>() {
       @Override
       protected void initChannel(Channel channel) throws Exception {
         ChannelPipeline pipeline = channel.pipeline();
-//        FixedLengthFrameDecoder frameDecoder = new FixedLengthFrameDecoder(4);
-//        pipeline.addLast("frameDecoder", frameDecoder);
-        pipeline.addLast("requestDecoder", new ServerRequestHandler(nodeService));
+        //        FixedLengthFrameDecoder frameDecoder = new FixedLengthFrameDecoder(4);
+        //        pipeline.addLast("frameDecoder", frameDecoder);
+        pipeline.addLast("requestDecoder", new ServerRequestHandler(node));
         pipeline.addLast("responseEncoder", new ResponseEncoder());
       }
     });

@@ -2,14 +2,14 @@ package persion.alex.raft.node;
 
 import io.netty.buffer.ByteBuf;
 
-public class AppendRequest {
+public class AppendRequest implements RpcRequest{
 
   int term;
   int leaderId;
-  long prevLogIndex;
+  int prevLogIndex;
   int prevLogTerm;
   String entry;
-  long leaderCommit;
+  int leaderCommit;
 
   public int getTerm() {
     return term;
@@ -31,7 +31,7 @@ public class AppendRequest {
     return prevLogIndex;
   }
 
-  public void setPrevLogIndex(long prevLogIndex) {
+  public void setPrevLogIndex(int prevLogIndex) {
     this.prevLogIndex = prevLogIndex;
   }
 
@@ -55,7 +55,7 @@ public class AppendRequest {
     return leaderCommit;
   }
 
-  public void setLeaderCommit(long leaderCommit) {
+  public void setLeaderCommit(int leaderCommit) {
     this.leaderCommit = leaderCommit;
   }
 
@@ -76,7 +76,7 @@ public class AppendRequest {
           request.leaderId = Integer.parseInt(item);
           break;
         case 2:
-          request.prevLogIndex = Long.parseLong(item);
+          request.prevLogIndex = Integer.parseInt(item);
           break;
         case 3:
           request.prevLogTerm = Integer.parseInt(item);
@@ -85,7 +85,7 @@ public class AppendRequest {
           request.entry = item;
           break;
         case 5:
-          request.leaderCommit = Long.parseLong(item);
+          request.leaderCommit = Integer.parseInt(item);
           break;
       }
       index++;
