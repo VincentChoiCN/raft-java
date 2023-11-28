@@ -1,0 +1,35 @@
+syntax = "proto3";
+package person.alex.raft.protobuf;
+
+message AppendRequest {
+  int32 term = 1;
+  int32 leaderId = 2;
+  int32 prevLogIndex = 3;
+  int32 prevLogTerm = 4;
+  string entry = 5;
+  int32 leaderCommit = 6;
+}
+
+message AppendResponse {
+  int32 term = 1;
+  bool success = 2;
+}
+
+message VoteResponse {
+  int32 term = 1;
+  bool voteGranted = 2;
+}
+
+message VoteRequest {
+  int32 term = 1;
+  int32 candidateId = 2;
+  int64 lastLogIndex = 3;
+  int32 lastLogTerm = 4;
+}
+
+service ClientService {
+  rpc appendEntry(AppendRequest)
+      returns(AppendResponse);
+}
+
+
