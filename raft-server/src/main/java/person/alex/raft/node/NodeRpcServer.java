@@ -28,8 +28,6 @@ public class NodeRpcServer {
       @Override
       protected void initChannel(Channel channel) throws Exception {
         ChannelPipeline pipeline = channel.pipeline();
-        //        FixedLengthFrameDecoder frameDecoder = new FixedLengthFrameDecoder(4);
-        //        pipeline.addLast("frameDecoder", frameDecoder);
         pipeline.addLast("requestDecoder", new ServerRequestHandler(node));
         pipeline.addLast("responseEncoder", new ResponseEncoder());
       }

@@ -1,18 +1,20 @@
 package person.alex.raft.client;
 
+import com.google.protobuf.Message;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import person.alex.raft.protobuf.ClientProtos;
 
+import java.util.Map;
 import java.util.Queue;
 
 public class ClientResponseHandler extends ChannelInboundHandlerAdapter {
 
-  Queue<InternalClient.ClientCall> callQ;
+  Map<Long, InternalClient.ClientCall> callQ;
 
-  public ClientResponseHandler(Queue<InternalClient.ClientCall> callQ) {
+  public ClientResponseHandler(Map<Long, InternalClient.ClientCall> callQ) {
     this.callQ = callQ;
   }
 
@@ -22,16 +24,17 @@ public class ClientResponseHandler extends ChannelInboundHandlerAdapter {
     int MsgLength = buf.readInt();
     byte code = buf.readByte();
     ByteBuf bytebuf = buf.readSlice(MsgLength - 1);
-    InternalClient.ClientCall call = callQ.poll();
+
+    Message response = null;
+    long callId = 0;
     if (code == 0x00) {
-      ClientProtos.AppendResponse appendResponse = ClientProtos.AppendResponse.parseFrom(bytebuf.slice().nioBuffer());
-      call.setResponse(appendResponse);
+      response = ClientProtos.AppendResponse.parseFrom(bytebuf.slice().nioBuffer());
+      callId = ((ClientProtos.AppendResponse)response).getCallId();
     } else if (code == 0x01) {
-      ClientProtos.VoteResponse voteResponse = ClientProtos.VoteResponse.parseFrom(bytebuf.slice().nioBuffer());
-      call.setResponse(voteResponse);
+      response = ClientProtos.VoteResponse.parseFrom(bytebuf.slice().nioBuffer());
+      callId = ((ClientProtos.VoteResponse)response).getCallId();
     }
-    synchronized (call) {
-      call.notifyAll();
-    }
+    InternalClient.ClientCall call = callQ.get(callId);
+    call.done.complete(response);
   }
 }

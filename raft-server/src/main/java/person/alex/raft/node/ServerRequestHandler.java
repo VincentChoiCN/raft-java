@@ -40,9 +40,7 @@ public class ServerRequestHandler extends ByteToMessageDecoder {
     } else if ((b & 1) == 1) {
       request = ClientProtos.VoteRequest.parseFrom(buf.slice().nioBuffer());
     }
-    System.out.println(request);
     if (request != null) node.requestQueue.add(new ServerCall(request, ctx.channel()));
     else throw new IOException("can not parse error");
-
   }
 }

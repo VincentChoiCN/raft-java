@@ -1,6 +1,8 @@
 package person.alex.raft.client;
 
 import com.google.protobuf.Message;
+import com.google.protobuf.RpcController;
+import com.google.protobuf.ServiceException;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -10,23 +12,24 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import person.alex.raft.node.NodeService;
 import person.alex.raft.protobuf.ClientProtos;
 import person.alex.raft.protobuf.ClientProtos.AppendRequest;
 
-import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class InternalClient implements NodeService {
+public class InternalClient implements ClientProtos.ClientService.BlockingInterface {
 
   Channel channel;
 
-  AtomicLong callId = new AtomicLong(0);
+  AtomicLong curCallId = new AtomicLong(0);
 
-  Queue<ClientCall> callQ = new LinkedBlockingQueue<>();
+  Map<Long, ClientCall> callQ = new ConcurrentHashMap<>();
 
   public InternalClient(InetSocketAddress address, NioEventLoopGroup loopGroup) throws InterruptedException {
     channel = new Bootstrap().group(loopGroup).channel(NioSocketChannel.class).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1).handler(new ChannelInitializer<Channel>() {
@@ -41,46 +44,44 @@ public class InternalClient implements NodeService {
     }).localAddress(null).remoteAddress(address).connect().sync().channel();
   }
 
+
   @Override
-  public ClientProtos.AppendResponse appendEntries(AppendRequest appendRequest) throws IOException, InterruptedException {
-    ClientCall clientCall = new ClientCall(channel, callId.incrementAndGet(), appendRequest, 0);
-    callQ.add(clientCall);
-    return (ClientProtos.AppendResponse) clientCall.rpcCallAndWait();
+  public ClientProtos.AppendResponse appendEntries(RpcController controller, AppendRequest request) throws ServiceException {
+    try {
+      ClientProtos.AppendRequest.Builder builder =  request.toBuilder();
+      builder.setCallId(curCallId.incrementAndGet());
+      request = builder.build();
+
+      ClientCall clientCall = new ClientCall(channel, request, 0);
+      callQ.put(request.getCallId(), clientCall);
+      return (ClientProtos.AppendResponse) clientCall.rpcCallAndWait();
+    } catch (InterruptedException ie) {
+      throw new ServiceException(ie);
+    } catch (ExecutionException e) {
+      throw new ServiceException(e);
+    }
   }
 
   @Override
-  public ClientProtos.VoteResponse requestVote(ClientProtos.VoteRequest voteRequest) {
+  public ClientProtos.VoteResponse requestVote(RpcController controller, ClientProtos.VoteRequest request) throws ServiceException {
     return null;
   }
 
   class ClientCall {
-    long callId;
-    Message response;
     Channel channel;
     int code;
     Message request;
+    CompletableFuture<Message> done = new CompletableFuture<>();
 
-    public ClientCall(Channel channel, long id, Message request, int code) {
-      this.callId = id;
+    public ClientCall(Channel channel, Message request, int code) {
       this.channel = channel;
       this.code = code;
       this.request = request;
     }
 
-    public Message rpcCallAndWait() throws InterruptedException {
+    public Message rpcCallAndWait() throws InterruptedException, ExecutionException {
       channel.writeAndFlush(this);
-      synchronized (this) {
-        try {
-          wait();
-        } catch (InterruptedException e) {
-          throw e;
-        }
-      }
-      return this.response;
-    }
-
-    public void setResponse(Message response) {
-      this.response = response;
+      return done.get();
     }
 
     public ByteBuf serializeRequest() {
