@@ -1,5 +1,6 @@
 package person.alex.raft.node;
 
+import com.google.protobuf.BlockingService;
 import com.google.protobuf.ServiceException;
 import org.apache.log4j.Logger;
 import person.alex.raft.client.RaftController;
@@ -37,6 +38,8 @@ public class Node {
 
   ClientProtos.ClientService.BlockingInterface nodeService;
 
+  BlockingService service;
+
   /**
    * fields before the end flag all should be stored in the stable storage.
    */
@@ -66,6 +69,7 @@ public class Node {
 
   InetSocketAddress localAddress;
 
+
   // only for test
   public Node(InetSocketAddress address) {
     this.localAddress = address;
@@ -79,6 +83,7 @@ public class Node {
   public void initialize() throws InterruptedException, IOException {
     running = true;
     nodeService = new NodeServiceImpl(this);
+    service = ClientProtos.ClientService.newReflectiveBlockingService(nodeService);
     startRpcServer();
     synchronized (this) {
       status = NodeStatus.FOLLOWER;

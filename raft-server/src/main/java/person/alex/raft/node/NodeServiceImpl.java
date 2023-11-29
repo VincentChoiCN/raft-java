@@ -14,7 +14,7 @@ public class NodeServiceImpl implements ClientProtos.ClientService.BlockingInter
 
   @Override
   public ClientProtos.AppendResponse appendEntries(RpcController controller, ClientProtos.AppendRequest request) throws ServiceException {
-    return ClientProtos.AppendResponse.newBuilder().setCallId(request.getCallId()).setSuccess(true).setTerm(-1).build();
+   return ClientProtos.AppendResponse.newBuilder().setSuccess(true).setTerm(-1).build();
   }
 
   @Override

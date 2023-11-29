@@ -1,6 +1,16 @@
 syntax = "proto3";
 package person.alex.raft.protobuf;
 
+message RequestHeader {
+  string service = 1;
+  string method = 2;
+  int64 callId = 3;
+}
+
+message ResponseHeader {
+  int64 callId = 1;
+}
+
 message AppendRequest {
   int32 term = 1;
   int32 leaderId = 2;
@@ -8,19 +18,16 @@ message AppendRequest {
   int32 prevLogTerm = 4;
   string entry = 5;
   int32 leaderCommit = 6;
-  int64 callId = 7;
 }
 
 message AppendResponse {
   int32 term = 1;
   bool success = 2;
-  int64 callId = 3;
 }
 
 message VoteResponse {
   int32 term = 1;
   bool voteGranted = 2;
-  int64 callId = 3;
 }
 
 message VoteRequest {
@@ -28,7 +35,6 @@ message VoteRequest {
   int32 candidateId = 2;
   int64 lastLogIndex = 3;
   int32 lastLogTerm = 4;
-  int64 callId = 5;
 }
 
 option java_generic_services = true;
