@@ -13,12 +13,30 @@ import static org.junit.Assert.assertEquals;
 
 public class TestAppendRequest {
 
+  public static final byte[] oneMB = new byte[1024 * 1024];
+
   public static ClientProtos.AppendRequest getAnRandomAppendRequest(int num) {
     int randomNum;
     if (num == 0) randomNum = new Random().nextInt(100);
     else randomNum = num;
     ClientProtos.AppendRequest.Builder request = ClientProtos.AppendRequest.newBuilder();
-    request.setEntry("data1");
+    request.setEntry("data_1");
+    request.setTerm(randomNum);
+    request.setLeaderId(randomNum);
+    request.setPrevLogIndex(randomNum);
+    request.setPrevLogTerm(randomNum);
+    request.setLeaderCommit(randomNum);
+    return request.build();
+  }
+
+  /**
+   * 1 MB Entry
+   * @return
+   */
+  public static ClientProtos.AppendRequest getLargeRequest() {
+    int randomNum = new Random().nextInt(100);
+    ClientProtos.AppendRequest.Builder request = ClientProtos.AppendRequest.newBuilder();
+    request.setEntry(new String(oneMB, StandardCharsets.UTF_8));
     request.setTerm(randomNum);
     request.setLeaderId(randomNum);
     request.setPrevLogIndex(randomNum);

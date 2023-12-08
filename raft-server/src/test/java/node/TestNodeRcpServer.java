@@ -11,6 +11,8 @@ import person.alex.raft.protobuf.ClientProtos;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import static org.junit.Assert.assertEquals;
+
 public class TestNodeRcpServer {
 
   @Test
@@ -23,7 +25,17 @@ public class TestNodeRcpServer {
 
     InternalClient client = new InternalClient(new InetSocketAddress("127.0.0.1", 7777), nioEventLoopGroup);
 
-    ClientProtos.AppendResponse response = client.appendEntries(new RaftController(), TestAppendRequest.getAnRandomAppendRequest(4));
+    for (int i = 0; i < 450000; i++) {
+      ClientProtos.AppendResponse response = client.appendEntries(new RaftController(), TestAppendRequest.getLargeRequest());
+      System.out.println(response);
+      System.out.println(i);
+      assertEquals(response.getTerm(), -1);
+      if(i % 3000 == 0)
+        System.gc();
+    }
+    System.gc();
 
+
+    Thread.sleep(10000000);
   }
 }

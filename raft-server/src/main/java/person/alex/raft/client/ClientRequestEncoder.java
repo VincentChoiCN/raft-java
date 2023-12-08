@@ -9,7 +9,7 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import person.alex.raft.protobuf.ClientProtos;
-import person.alex.raft.utils.IPCUtils;
+import person.alex.raft.node.ipc.utils.IPCUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,7 +42,7 @@ public class ClientRequestEncoder extends ChannelDuplexHandler {
     ClientProtos.ResponseHeader header = (ClientProtos.ResponseHeader) IPCUtils.buildFromCIS(cis, ClientProtos.ResponseHeader.newBuilder(), responseHeaderSize);
     int responseSize = cis.readRawVarint32();
     long callId = header.getCallId();
-    InternalClient.ClientCall call = callQ.get(callId);
+    InternalClient.ClientCall call = callQ.remove(callId);
     Message.Builder builder = call.returnType.newBuilderForType();
     IPCUtils.buildFromCIS(cis, builder, responseSize);
     call.complete(builder.build());
@@ -56,6 +56,7 @@ public class ClientRequestEncoder extends ChannelDuplexHandler {
     buf.skipBytes(4);
     byte[] dst = new byte[responseSize];
     buf.readBytes(dst);
+    buf.release();
     return dst;
   }
 }

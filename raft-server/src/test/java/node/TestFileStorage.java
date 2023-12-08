@@ -2,7 +2,7 @@ package node;
 
 import org.junit.Before;
 import org.junit.Test;
-import person.alex.raft.node.Entry;
+import person.alex.raft.node.ipc.Entry;
 import person.alex.raft.node.FileStorage;
 
 import java.io.File;

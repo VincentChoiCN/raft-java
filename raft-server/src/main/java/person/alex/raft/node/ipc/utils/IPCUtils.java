@@ -1,4 +1,4 @@
-package person.alex.raft.utils;
+package person.alex.raft.node.ipc.utils;
 
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;

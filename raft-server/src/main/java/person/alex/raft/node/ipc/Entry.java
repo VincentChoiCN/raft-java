@@ -1,16 +1,16 @@
-package person.alex.raft.node;
+package person.alex.raft.node.ipc;
 
 public class Entry {
 
   String msg;
-  int epoch;
-  int index;
+  int term;
+  int commitIndex;
   long seqId;
 
-  public Entry(String msg, int epoch, int index, long seqId) {
+  public Entry(String msg, int term, int index, long seqId) {
     this.msg = msg;
-    this.epoch = epoch;
-    this.index = index;
+    this.term = term;
+    this.commitIndex = index;
     this.seqId = seqId;
   }
 
@@ -18,7 +18,7 @@ public class Entry {
    * for delete entry
    */
   public Entry(int index, long seqId) {
-    this.index = index;
+    this.commitIndex = index;
     this.seqId = seqId;
   }
 
@@ -34,20 +34,28 @@ public class Entry {
     this.msg = msg;
   }
 
-  public int getEpoch() {
-    return epoch;
+  public int getTerm() {
+    return term;
   }
 
-  public void setEpoch(int epoch) {
-    this.epoch = epoch;
+  public void setTerm(int term) {
+    this.term = term;
   }
 
-  public int getIndex() {
-    return index;
+  public int getCommitIndex() {
+    return commitIndex;
   }
 
-  public void setIndex(int index) {
-    this.index = index;
+  public void setCommitIndex(int commitIndex) {
+    this.commitIndex = commitIndex;
+  }
+
+  public long getSeqId() {
+    return seqId;
+  }
+
+  public void setSeqId(long seqId) {
+    this.seqId = seqId;
   }
 
   /**
@@ -56,7 +64,7 @@ public class Entry {
    * @return
    */
   public String toString() {
-    return index + "#" + epoch + "#" + seqId + "#" + msg;
+    return commitIndex + "#" + term + "#" + seqId + "#" + msg;
   }
 
   public static Entry parseFromString(String str) {
@@ -70,10 +78,10 @@ public class Entry {
       }
       switch (count) {
         case 0:
-          entry.index = Integer.parseInt(item);
+          entry.commitIndex = Integer.parseInt(item);
           break;
         case 1:
-          entry.epoch = Integer.parseInt(item);
+          entry.term = Integer.parseInt(item);
           break;
         case 2:
           entry.seqId = Long.parseLong(item);

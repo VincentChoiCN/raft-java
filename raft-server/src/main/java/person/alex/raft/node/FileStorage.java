@@ -1,6 +1,7 @@
 package person.alex.raft.node;
 
 import org.apache.log4j.Logger;
+import person.alex.raft.node.ipc.Entry;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -91,7 +92,7 @@ public class FileStorage implements Storage {
     String str;
     while((str = input.readLine()) != null) {
       Entry entry = Entry.parseFromString(str);
-      treeMap.put(entry.index, entry);
+      treeMap.put(entry.getIndex(), entry);
     }
     return treeMap;
   }

@@ -1,5 +1,7 @@
 package person.alex.raft.node;
 
+import person.alex.raft.node.ipc.Entry;
+
 import java.io.IOException;
 import java.util.NavigableMap;
 
